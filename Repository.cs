@@ -24,11 +24,11 @@ namespace KnowShow
             m_blobClient = storageAccount.CreateCloudBlobClient();
         }
 
-        public async Task InsertLog(string logStoreName, string logEntry)
+        public async Task InsertLog(string logStoreName, DateTime logTimestamp, string logResult)
         {
             LogStore logStore = await GetLog(logStoreName);
 
-            logStore.Logs.Add(logEntry);
+            logStore.Logs.Add(new LogStore.LogItem(logTimestamp, logResult));
 
             var container = m_blobClient.GetContainerReference("log-store");
             var blob = container.GetBlockBlobReference($"{logStoreName}.json");
