@@ -2,19 +2,21 @@
 body {
   font-family: 'myriad pro', sans-serif;
   font-size: 20px;
+  background-color: #ebf5e1;
   border: 0;
 }
 
 loglist {
   display: block;
-  max-width: 400px;
-  margin: 5% auto;
+  /* max-width: 400px; */
+  /* margin: 5% auto; */
+  /* box-shadow: 3px 3px 5px 6px #ccc; */
 }
 
 form input {
   font-size: 85%;
   padding: .4em;
-  border: 1px solid #ccc;
+  border: 1px solid #ffeedb;
   border-radius: 2px;
 }
 
@@ -42,11 +44,6 @@ ul {
 li {
   list-style-type: none;
   padding: .2em 0;
-}
-
-.completed {
-  text-decoration: line-through;
-  color: #ccc;
 }
 
 label {

@@ -17,12 +17,14 @@ namespace KnowShow
 
         public class LogItem
         {
-            public LogItem(DateTime timestamp, string result)
+            public LogItem(DateTime timestamp, bool successful, string result)
             {
                 Timestamp = timestamp;
+                Successful = successful;
                 Result = result;
             }
             public DateTime Timestamp {get; private set;}
+            public bool Successful {get; private set;}
             public string Result {get; private set;}
             
         }

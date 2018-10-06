@@ -28,7 +28,19 @@ namespace KnowShow
         {
             LogStore logStore = await GetLog(logStoreName);
 
-            logStore.Logs.Add(new LogStore.LogItem(logTimestamp, logResult));
+            try
+            {
+                var base64EncodedBytes = System.Convert.FromBase64String(logResult);
+                logResult = System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
+            }
+            catch
+            {
+                // not base64 encoded
+            }
+
+            var isSuccessful = logResult.ToLower().Contains("completed successfully");
+
+            logStore.Logs.Add(new LogStore.LogItem(logTimestamp, isSuccessful, logResult));
 
             var container = m_blobClient.GetContainerReference("log-store");
             var blob = container.GetBlockBlobReference($"{logStoreName}.json");
@@ -44,6 +56,9 @@ namespace KnowShow
             LogStore logStore = await blob.ExistsAsync()
                 ? JsonConvert.DeserializeObject<LogStore>(await blob.DownloadTextAsync())
                 : new LogStore(logStoreName);
+
+            // Make most recent first in the list
+            logStore.Logs.Sort((left,right) => right.Timestamp.CompareTo(left.Timestamp));
 
             return logStore;
         }
