@@ -13,8 +13,14 @@ using Newtonsoft.Json;
 
 // setup:
 // - CORS
-// - ConnectionString
+// - App settings:
+//   - ConnectionString
+//   - SmtpServer
+//   - SmtpUsername
+//   - SmtpPassword
 // - IsLocal=true in local.settings.json
+// - dotnet add package mailkit
+//
 //
 // POST / could create if id not found, error if found and type doesn't match existing? Some params would become optional if ID already found (minperiod). Others could be allowed to change (min/max).
 //     ?id=xyz&type=heartbeat&minperiod=[auto/60m/24h]     / nightly backup, only send heartbeat if rsync contains "success", else use &type=message&level=error
@@ -48,7 +54,14 @@ namespace KnowShow
             string name = request.Query["name"];
             if (name == null)
                 return new BadRequestObjectResult("Pass a name on the query string");
-            return (ActionResult)new OkObjectResult(await repository.GetLog(name));
+
+            DateTime? onlyLogsSince = null;
+            if (int.TryParse(request.Query["hours"], out int hours))
+                onlyLogsSince = DateTime.UtcNow.Subtract(new TimeSpan(hours, 0, 0));
+
+            var logStore = await repository.GetLog(name, onlyLogsSince);
+
+            return (ActionResult)new OkObjectResult(logStore);
         }
 
         private static async Task<IActionResult> HandlePost(HttpRequest request, Repository repository, ILogger log)

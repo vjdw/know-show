@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -47,7 +48,7 @@ namespace KnowShow
             await blob.UploadTextAsync(JsonConvert.SerializeObject(logStore));
         }
 
-        public async Task<LogStore> GetLog(string logStoreName)
+        public async Task<LogStore> GetLog(string logStoreName, DateTime? onlyLogsSince = null)
         {
             var container = m_blobClient.GetContainerReference("log-store");
             await container.CreateIfNotExistsAsync();
@@ -57,8 +58,10 @@ namespace KnowShow
                 ? JsonConvert.DeserializeObject<LogStore>(await blob.DownloadTextAsync())
                 : new LogStore(logStoreName);
 
-            // Make most recent first in the list
-            logStore.Logs.Sort((left,right) => right.Timestamp.CompareTo(left.Timestamp));
+            logStore.Logs = logStore.Logs
+                .Where(log => onlyLogsSince == null || log.Timestamp >= onlyLogsSince)
+                .OrderByDescending(log => log.Timestamp)
+                .ToList();
 
             return logStore;
         }
