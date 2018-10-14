@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
@@ -17,6 +18,8 @@ namespace KnowShow
 {
     public static class Web
     {
+        private static new Dictionary<string,string> _cache = new Dictionary<string,string>();
+
         [FunctionName("Web")]
         public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "web/{path1?}/{path2?}")]HttpRequest req, ILogger log, string path1, string path2)
         {
@@ -39,21 +42,31 @@ namespace KnowShow
             else if (path.ToLower().EndsWith(".tag"))
                 contentType = "text/xml";
 
-            bool.TryParse(Environment.GetEnvironmentVariable("IsLocal", EnvironmentVariableTarget.Process), out var isLocal);
             string blobContent;
-            if (isLocal)
+            if (false) //_cache.ContainsKey(path))
             {
-                blobContent = File.ReadAllText($"/home/vin/code/know-show/web/{path}");
+                blobContent = _cache[path];
             }
             else
             {
-                var storageAccount = CloudStorageAccount.Parse(connectionString);
-                var blobClient = storageAccount.CreateCloudBlobClient();
-                var container = blobClient.GetContainerReference("$web");
-                var blob = container.GetBlockBlobReference(path);
-                if (!await blob.ExistsAsync())
-                    return new NotFoundResult();
-                blobContent = await blob.DownloadTextAsync();
+                bool.TryParse(Environment.GetEnvironmentVariable("IsLocal", EnvironmentVariableTarget.Process), out var isLocal);
+                
+                if (isLocal)
+                {
+                    blobContent = File.ReadAllText($"/home/vin/code/know-show/web/{path}");
+                }
+                else
+                {
+                    var storageAccount = CloudStorageAccount.Parse(connectionString);
+                    var blobClient = storageAccount.CreateCloudBlobClient();
+                    var container = blobClient.GetContainerReference("$web");
+                    var blob = container.GetBlockBlobReference(path);
+                    if (!await blob.ExistsAsync())
+                        return new NotFoundResult();
+                    blobContent = await blob.DownloadTextAsync();
+                }
+
+                _cache[path] = blobContent;
             }
 
             var buffLength = System.Text.UnicodeEncoding.UTF8.GetByteCount(blobContent);

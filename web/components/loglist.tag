@@ -8,18 +8,18 @@
   </ul>
 
   <script>
-    // xyzzy remote/local
     var logTagUrl = "web/components/log.tag"
 
     var self = this
     this.items = []
     this.on('mount', function(){
-      self.items = self.allTodos()
+      var logs = self.getLogs()
+      self.update({items: logs})
     });
 
     var self = this
-    allTodos(){
-      var url = opts.apiUrl + 'Log?name=' + opts.name + opts.apiCode;
+    getLogs(){
+      var url = opts.api_url + 'Log?name=' + opts.name + opts.api_code;
       console.log('going to ' + url);
       $.ajax({
         url: url,
@@ -31,9 +31,6 @@
           console.log(data)
           self.items = data.logs
           self.update()
-          riot.compile(logTagUrl, function() {
-            riot.mount('log');
-          });
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) { 
           console.log(XMLHttpRequest.status + ' from ' + url);
