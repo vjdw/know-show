@@ -30,6 +30,9 @@
 
       riot.compile(function() {
         riot.mount('*', {
+          login: {
+            api_url: url
+          },
           loglist: {
             name: 'Backup',
             api_url: url,

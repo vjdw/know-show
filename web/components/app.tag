@@ -1,6 +1,6 @@
 <app>
 
-    <login show={!auth}></login>
+    <login show={!auth} api_url="{opts.login.api_url}"></login>
     <loglist if={auth} name="{opts.loglist.name}" api_url="{opts.loglist.api_url}" api_code="{opts.loglist.api_code}"></loglist>
 
     <script>
