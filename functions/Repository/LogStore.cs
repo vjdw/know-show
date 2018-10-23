@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace KnowShow
+namespace KnowShow.Repository
 {
     public class LogStore
     {

@@ -3,7 +3,7 @@
   "tasks": [
     {
       "label": "clean",
-      "command": "dotnet clean",
+      "command": "dotnet clean ${workspaceFolder}/functions",
       "type": "shell",
       "presentation": {
         "reveal": "always"
@@ -12,7 +12,7 @@
     },
     {
       "label": "build",
-      "command": "dotnet build",
+      "command": "dotnet build ${workspaceFolder}/functions",
       "type": "shell",
       "dependsOn": "clean",
       "group": {
@@ -26,7 +26,7 @@
     },
     {
       "label": "clean release",
-      "command": "dotnet clean --configuration Release",
+      "command": "dotnet clean --configuration Release ${workspaceFolder}/functions",
       "type": "shell",
       "presentation": {
         "reveal": "always"
@@ -36,7 +36,7 @@
     {
       "label": "publish",
       "identifier": "publish",
-      "command": "dotnet publish --configuration Release",
+      "command": "dotnet publish --configuration Release ${workspaceFolder}/functions",
       "type": "shell",
       "dependsOn": "clean release",
       "presentation": {
@@ -50,7 +50,7 @@
       "type": "shell",
       "dependsOn": "build",
       "options": {
-        "cwd": "${workspaceFolder}/bin/Debug/netstandard2.0"
+        "cwd": "${workspaceFolder}/functions/bin/Debug/netstandard2.0"
       },
       "command": "func host start",
       "isBackground": true,

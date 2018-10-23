@@ -10,7 +10,7 @@ using MailKit.Net.Smtp;
 using MailKit;
 using MimeKit;
 using Newtonsoft.Json;
-
+using KnowShow.Repository;
 
 namespace KnowShow
 {

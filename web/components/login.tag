@@ -24,6 +24,9 @@
     </form>
 
     <script>
+        if (Cookies.get('auth'))
+            route('loglist');
+
         submit(e) {
             e.preventDefault();
 
@@ -40,11 +43,12 @@
                     withCredentials: false
                 },
                 success: function (data) {
-                    console.log('login data: ' + data)
+                    Cookies.set('auth', data, { expires: 1 });
                     route('loglist');
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log(XMLHttpRequest.status + ' from ' + url);
+                    route('login');
                 }
             });
         };

@@ -10,6 +10,8 @@ using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
+using KnowShow.Repository;
+using KnowShow.Utility;
 
 // setup:
 // - CORS
@@ -42,16 +44,19 @@ namespace KnowShow
             string connectionString = Environment.GetEnvironmentVariable("ConnectionString", EnvironmentVariableTarget.Process);
             if (string.IsNullOrWhiteSpace(connectionString))
                 throw new Exception($"{nameof(connectionString)} is empty.");
-            var repository = new Repository(connectionString);
-
+            var repository = new LogRepository(connectionString);
+ 
             if (request.Method == "GET")
                 return await HandleGet(request, repository, log);
             else
                 return await HandlePost(request, repository, log);
         }
 
-        private static async Task<IActionResult> HandleGet(HttpRequest request, Repository repository, ILogger log)
+        private static async Task<IActionResult> HandleGet(HttpRequest request, LogRepository repository, ILogger log)
         {
+            if (!Authentication.HasAccountToken(request, out var accountId))
+                return new UnauthorizedResult();
+
             string name = request.Query["name"];
             if (name == null)
                 return new BadRequestObjectResult("Pass a name on the query string");
@@ -65,7 +70,7 @@ namespace KnowShow
             return (ActionResult)new OkObjectResult(logStore);
         }
 
-        private static async Task<IActionResult> HandlePost(HttpRequest request, Repository repository, ILogger log)
+        private static async Task<IActionResult> HandlePost(HttpRequest request, LogRepository repository, ILogger log)
         {
             string requestBody = await new StreamReader(request.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);

@@ -13,13 +13,13 @@ using Newtonsoft.Json;
 using Microsoft.WindowsAzure.Storage.Table;
 using Microsoft.WindowsAzure.Storage.Blob;
 
-namespace KnowShow
+namespace KnowShow.Repository
 {
-    public class Repository
+    public class LogRepository
     {
         private CloudBlobClient m_blobClient;
 
-        public Repository(string connectionString)
+        public LogRepository(string connectionString)
         {
             var storageAccount = CloudStorageAccount.Parse(connectionString);
             m_blobClient = storageAccount.CreateCloudBlobClient();

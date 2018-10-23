@@ -20,7 +20,6 @@
     var self = this
     getLogs(){
       var url = opts.api_url + 'Log?name=' + opts.name + opts.api_code;
-      console.log('going to ' + url);
       $.ajax({
         url: url,
         type: "GET",
@@ -32,9 +31,12 @@
           self.items = data.logs
           self.update()
         },
-        error: function(XMLHttpRequest, textStatus, errorThrown) { 
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
+          if (XMLHttpRequest.status == 401) {
+            Cookies.remove('auth');
+          }
           console.log(XMLHttpRequest.status + ' from ' + url);
-         }  
+         }
       });
     }
   </script>
