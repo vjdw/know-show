@@ -1,9 +1,9 @@
-<loglist>
+<ks-loglist>
   <h3>{ opts.name }</h3>
 
   <ul>
     <li each={ item in items }>
-      <log successful={item.successful} timestamp={item.timestamp} log={item.result}></log>
+      <ks-log successful={item.successful} timestamp={item.timestamp} log={item.result}></ks-log>
     </li>
   </ul>
 
@@ -17,7 +17,6 @@
       self.update({items: logs})
     });
 
-    var self = this
     getLogs(){
       var url = opts.api_url + 'Log?name=' + opts.name + opts.api_code;
       $.ajax({
@@ -35,10 +34,10 @@
           if (XMLHttpRequest.status == 401) {
             Cookies.remove('auth');
           }
-          console.log(XMLHttpRequest.status + ' from ' + url);
+          console.log('loglist: ' + XMLHttpRequest.status + ' from ' + url);
          }
       });
     }
   </script>
 
-</loglist>
+</ks-loglist>

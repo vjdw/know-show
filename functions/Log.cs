@@ -37,7 +37,7 @@ namespace KnowShow
     public static class Log
     {
         [FunctionName("Log")]
-        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]HttpRequest request, ILogger log)
+        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)]HttpRequest request, ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
@@ -61,13 +61,24 @@ namespace KnowShow
             if (name == null)
                 return new BadRequestObjectResult("Pass a name on the query string");
 
-            DateTime? onlyLogsSince = null;
-            if (int.TryParse(request.Query["hours"], out int hours))
-                onlyLogsSince = DateTime.UtcNow.Subtract(new TimeSpan(hours, 0, 0));
+            string type = request.Query["type"];
+            if (type == null)
+                type ="log";
 
-            var logStore = await repository.GetLog(name, onlyLogsSince);
+            if (type == "log")
+            {
+                DateTime? onlyLogsSince = null;
+                if (int.TryParse(request.Query["hours"], out int hours))
+                    onlyLogsSince = DateTime.UtcNow.Subtract(new TimeSpan(hours, 0, 0));
 
-            return (ActionResult)new OkObjectResult(logStore);
+                var logStore = await repository.GetLog(name, onlyLogsSince);
+
+                return (ActionResult)new OkObjectResult(logStore);
+            }
+            else
+            {
+                return new NotFoundObjectResult($"Unknown type '{type}'.");
+            }
         }
 
         private static async Task<IActionResult> HandlePost(HttpRequest request, LogRepository repository, ILogger log)

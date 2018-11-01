@@ -1,4 +1,4 @@
-<log onclick={ toggleDetail }>
+<ks-log onclick={ toggleDetail }>
     <div class={ opts.successful ? 'logContainer successful' : 'logContainer unsuccessful' }>
         <p class={ opts.successful ? 'successful' : 'unsuccessful' }
         data-is="animore" mount={{ opacity: [0,1], duration: 800, easing: 'easeInOutQuart' }}>
@@ -47,4 +47,4 @@
             overflow: hidden;
         }
     </style>
-</log>
+</ks-log>

@@ -1,4 +1,4 @@
-<login>
+<ks-login>
     <form name="login" id="login" onsubmit="{submit}" action="{opts.api_url + 'login'}" method="post" enctype="multipart/form-data">
         <div class="container">
             <label for="username"><b>Username</b></label>
@@ -47,10 +47,10 @@
                     route('loglist');
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    console.log(XMLHttpRequest.status + ' from ' + url);
+                    console.log('login:' + XMLHttpRequest.status + ' from ' + url);
                     route('login');
                 }
             });
         };
     </script>
-</login>
+</ks-login>

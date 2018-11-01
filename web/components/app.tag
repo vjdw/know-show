@@ -1,7 +1,8 @@
-<app>
+<ks-app>
 
-    <login show={!auth} api_url="{opts.login.api_url}"></login>
-    <loglist if={auth} name="{opts.loglist.name}" api_url="{opts.loglist.api_url}" api_code="{opts.loglist.api_code}"></loglist>
+    <ks-login show={!auth} api_url="{opts.login.api_url}"></ks-login>
+    <ks-meter if={auth} name="{opts.meter.name}" api_url="{opts.loglist.api_url}" api_code="{opts.loglist.api_code}"></ks-meter>
+    <ks-loglist if={auth} name="{opts.loglist.name}" api_url="{opts.loglist.api_url}" api_code="{opts.loglist.api_code}"></ks-loglist>
 
     <script>
         var self = this
@@ -18,7 +19,7 @@
 
         function viewloglist() {
             console.log('enter loglist')
-            self.auth = true;
+            self.auth = Cookies.get('auth');
             self.update();
         }
 
@@ -31,4 +32,4 @@
 
     </script>
 
-</app>
+</ks-app>

@@ -9,10 +9,11 @@
 
   <body>
 
-    <app></app>
+    <ks-app></ks-app>
 
     <script data-src="web/components/log.tag" type="riot/tag"></script>
     <script data-src="web/components/loglist.tag" type="riot/tag"></script>
+    <script data-src="web/components/meter.tag" type="riot/tag"></script>
     <script data-src="web/components/login.tag" type="riot/tag"></script>
     <script data-src="web/components/app.tag" type="riot/tag"></script>
 
@@ -20,14 +21,20 @@
     <script src="https://rawgit.com/riot/route/master/dist/route.min.js"></script>
     <script src="https://cdn.rawgit.com/riot/animore/master/riot-animore.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@aspnet/signalr@1.0.3/dist/browser/signalr.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@0.18.0/dist/axios.min.js"></script>
     
     <script
-			  src="https://code.jquery.com/jquery-3.3.1.min.js"
-			  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-			  crossorigin="anonymous"></script>
+        src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
 
     <script>
-      var url = location.href.replace('/web','/');
+      var url = location.href.split('#')[0].replace('/web','/');
       var code = '&code=DuEIMldhwbmHrpbMVu9fCxXnntVhlTjrQ5oM3odqPvI473o5RALXaQ==';
 
       riot.compile(function() {
@@ -39,6 +46,10 @@
             name: 'Backup',
             api_url: url,
             api_code: code
+          },
+          meter: {
+            name: 'PhotoUpload',
+            api_url: url
           }
         });
         route.start(true);
