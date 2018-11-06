@@ -36,16 +36,16 @@ namespace KnowShow
             var mostRecentLog = logStore.Logs.FirstOrDefault();
             if (mostRecentLog == null)
                 statusMessage += "No logs in last 25 hours";
-            else if (!mostRecentLog.Successful)
-                statusMessage += $"Most recent log entry flagged unsuccessful at {mostRecentLog.Timestamp.ToString("s")}Z\n\n{mostRecentLog.Result}";
-            else
+            else if (mostRecentLog.Successful)
                 statusMessage += $"Most recent log entry flagged successful at {mostRecentLog.Timestamp.ToString("s")}Z";
+            else
+                statusMessage += $"Most recent log entry flagged unsuccessful at {mostRecentLog.Timestamp.ToString("s")}Z\n\n{mostRecentLog.Result}";
 
             var message = new MimeMessage();
 
             message.From.Add(new MailboxAddress("Know-Show", "noreply@know-show.azurewebsites.net"));
             message.To.Add(new MailboxAddress("Alert", "knowshowalert@vw.sent.com"));
-            message.Subject = $"{logStoreName} Status";
+            message.Subject = $"{logStoreName} Status: {(mostRecentLog.Successful ? "OK" : "Error")}";
             message.Body = new TextPart("plain"){ Text = statusMessage };
 
             using (var smtpClient = new SmtpClient())

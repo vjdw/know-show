@@ -17,7 +17,7 @@
         this.total = 0
         this.dataset = []
         this.data = []
-        this.on('mount', function(){
+        this.on('mount', function () {
             self.getState()
         });
 
@@ -29,65 +29,80 @@
             })
         })
 
-        function drawChart(dataset){
-            console.log(dataset)
+        function drawChart(dataset) {
             var ctx = document.getElementById("chart").getContext('2d');
             var myChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
                     datasets: [{
-                        label: '# of Votes',
+                        label: opts.name,
                         data: dataset,
                         backgroundColor: [
-                            'rgba(255, 99, 132, 0.2)',
-                            'rgba(54, 162, 235, 0.2)',
-                            'rgba(255, 206, 86, 0.2)',
-                            'rgba(75, 192, 192, 0.2)',
-                            'rgba(153, 102, 255, 0.2)',
-                            'rgba(255, 159, 64, 0.2)'
+                            'rgba(255, 99, 132, 0.2)'
                         ],
                         borderColor: [
-                            'rgba(255,99,132,1)',
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(153, 102, 255, 1)',
-                            'rgba(255, 159, 64, 1)'
+                            'rgba(55,99,240,1)'
                         ],
                         borderWidth: 1
                     }]
                 },
                 options: {
                     scales: {
+                        xAxes: [{
+                            type: 'time',
+                            time: {
+                                //unit: "hour",
+                                displayFormats: {
+                                    hour: "DD/MM HH:00",
+                                    minute: "HH:mm:ss",
+                                    second: "HH:mm:ss"
+                                }
+                            },
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Time'
+                            },
+                            ticks: {
+                                major: {
+                                    fontStyle: 'bold',
+                                    fontColor: '#FF0000'
+                                }
+                            }
+                        }],
                         yAxes: [{
                             ticks: {
-                                beginAtZero:true
+                                beginAtZero: true
                             }
                         }]
                     }
                 }
-            }); 
+            });
             self.trigger('loaded', myChart)
         }
 
-        getState(){
+        getState() {
             var url = opts.api_url + 'Log?name=' + opts.name;
             $.ajax({
                 url: url,
                 type: "GET",
                 dataType: "json",
                 contentType: "application/json; charset=utf-8",
-                xhrFields: { withCredentials: false },
-                success: function(data) {
+                xhrFields: {
+                    withCredentials: false
+                },
+                success: function (data) {
                     console.log(data)
                     self.data = data
                     self.total = data.logs.length
-                    self.dataset = data.logs.map(x => x.result.replace(/\D+$/g, "")).reverse()
+                    self.dataset = data.logs.map(log => ({
+                        x: log.timestamp,
+                        y: log.result.replace(/\D+$/g, "") // extract number value at start of string
+                    })).reverse()
                     self.update()
                     drawChart(self.dataset)
                 },
-                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
                     if (XMLHttpRequest.status == 401) {
                         Cookies.remove('auth');
                         route('login');
