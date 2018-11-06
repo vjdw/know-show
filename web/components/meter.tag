@@ -90,6 +90,7 @@
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
                     if (XMLHttpRequest.status == 401) {
                         Cookies.remove('auth');
+                        route('login');
                     }
                     console.log('loglist: ' + XMLHttpRequest.status + ' from ' + url);
                 }

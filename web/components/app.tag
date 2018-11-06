@@ -1,35 +1,42 @@
 <ks-app>
 
-    <ks-login show={!auth} api_url="{opts.login.api_url}"></ks-login>
-    <ks-meter if={auth} name="{opts.meter.name}" api_url="{opts.loglist.api_url}" api_code="{opts.loglist.api_code}"></ks-meter>
-    <ks-loglist if={auth} name="{opts.loglist.name}" api_url="{opts.loglist.api_url}" api_code="{opts.loglist.api_code}"></ks-loglist>
+    <ks-login if={displayLogin} api_url="{opts.login.api_url}"></ks-login>
+    <ks-meter if={displayDashboard} name="{opts.meter.name}" api_url="{opts.loglist.api_url}" api_code="{opts.loglist.api_code}"></ks-meter>
+    <ks-loglist if={displayDashboard} name="{opts.loglist.name}" api_url="{opts.loglist.api_url}" api_code="{opts.loglist.api_code}"></ks-loglist>
 
     <script>
-        var self = this
+        var self = this;
 
         var r = route.create()
-        r('login',   viewlogin   )
-        r('loglist', viewloglist )
-        r(           viewlogin   )
+        r('login',     doDisplayLogin   )
+        r('dashboard', dodisplayDashboard )
+        r(             doDisplayLogin   )
 
-        function viewlogin() {
-            self.auth = false;
+        function doDisplayLogin() {
+            self.displayLogin = true;
+            self.displayDashboard = false;
             self.update();
         }
 
-        function viewloglist() {
-            console.log('enter loglist')
-            self.auth = Cookies.get('auth');
-            self.update();
+        function dodisplayDashboard() {
+            console.log('enter dashboard')
+
+            if (!Cookies.get('auth')) {
+                route('login');
+                return;
+            }
+
+            self.displayLogin = false;
+                self.displayDashboard = true;
+                self.update();
         }
 
-      //  this.on('mount', () => {
-     //       riot.route((collection, action, id) => {
-     //       });
-     //   });
-
-    //   route.start(true);
-
+        this.on('mount', () => {
+            if (Cookies.get('auth'))
+                route('dashboard');
+            else
+                route('login');
+        });
     </script>
 
 </ks-app>

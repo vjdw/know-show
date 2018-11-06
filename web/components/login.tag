@@ -24,9 +24,6 @@
     </form>
 
     <script>
-        if (Cookies.get('auth'))
-            route('loglist');
-
         submit(e) {
             e.preventDefault();
 
@@ -44,7 +41,7 @@
                 },
                 success: function (data) {
                     Cookies.set('auth', data, { expires: 1 });
-                    route('loglist');
+                    route('dashboard');
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log('login:' + XMLHttpRequest.status + ' from ' + url);
