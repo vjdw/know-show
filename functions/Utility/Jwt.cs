@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JWT.Builder;
+using Microsoft.Extensions.Logging;
 
 namespace KnowShow.Utility
 {
@@ -20,17 +21,25 @@ namespace KnowShow.Utility
             return token;
         }
 
-        internal static (bool isValid, string id) ValidateJwt(string jwt)
+        internal static(bool isValid, string id) ValidateJwt(string jwt, ILogger log)
         {
-            var privateKeyPem = Environment.GetEnvironmentVariable("JwtPrivatePem", EnvironmentVariableTarget.Process);
+            try
+            {
+                var privateKeyPem = Environment.GetEnvironmentVariable("JwtPrivatePem", EnvironmentVariableTarget.Process);
 
-            var payload = new JwtBuilder()
-                .WithSecret(privateKeyPem)
-                .MustVerifySignature()
-                .Decode<IDictionary<string, object>>(jwt);
+                var payload = new JwtBuilder()
+                    .WithSecret(privateKeyPem)
+                    .MustVerifySignature()
+                    .Decode<IDictionary<string, object>>(jwt);
 
-            var idKeyExists = payload?.ContainsKey("id") ?? false;
-            return (idKeyExists, idKeyExists ? (string)payload["id"] : "");
+                var idKeyExists = payload?.ContainsKey("id") ?? false;
+                return (idKeyExists, idKeyExists ? (string) payload["id"] : "");
+            }
+            catch (Exception ex)
+            {
+                log.LogWarning($"Exception when validting JWT: {ex}");
+                return (false, default(string));
+            }
         }
     }
 }

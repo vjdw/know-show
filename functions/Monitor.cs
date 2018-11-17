@@ -3,21 +3,22 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
+using KnowShow.Repository;
+using MailKit;
+using MailKit.Net.Smtp;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
-using MailKit.Net.Smtp;
-using MailKit;
 using MimeKit;
 using Newtonsoft.Json;
-using KnowShow.Repository;
 
 namespace KnowShow
 {
     public static class Monitor
     {
         [FunctionName("Monitor")]
-        public async static void Run([TimerTrigger("0 0 8 * * *")]TimerInfo myTimer, ILogger log)
+        public async static Task Run([TimerTrigger("0 0 8 * * *", RunOnStartup = false)] TimerInfo myTimer, ILogger log)
         {
             log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
 
@@ -45,10 +46,10 @@ namespace KnowShow
 
             message.From.Add(new MailboxAddress("Know-Show", "noreply@know-show.azurewebsites.net"));
             message.To.Add(new MailboxAddress("Alert", "knowshowalert@vw.sent.com"));
-            message.Subject = $"{logStoreName} Status: {(mostRecentLog.Successful ? "OK" : "Error")}";
-            message.Body = new TextPart("plain"){ Text = statusMessage };
+            message.Subject = $"{logStoreName} Status: {(mostRecentLog == null ? "Log Store Empty" : mostRecentLog.Successful ? "OK" : "Error")}";
+            message.Body = new TextPart("plain") { Text = statusMessage };
 
-            using (var smtpClient = new SmtpClient())
+            using(var smtpClient = new SmtpClient())
             {
                 var smtpServer = Environment.GetEnvironmentVariable("SmtpServer", EnvironmentVariableTarget.Process);
                 var smtpUsername = Environment.GetEnvironmentVariable("SmtpUsername", EnvironmentVariableTarget.Process);

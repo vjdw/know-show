@@ -2,16 +2,16 @@ using System;
 using System.Configuration;
 using System.IO;
 using System.Threading.Tasks;
+using KnowShow.Repository;
+using KnowShow.Utility;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
-using KnowShow.Repository;
-using KnowShow.Utility;
 
 // setup:
 // - CORS
@@ -37,7 +37,7 @@ namespace KnowShow
     public static class Log
     {
         [FunctionName("Log")]
-        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)]HttpRequest request, ILogger log)
+        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest request, ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
@@ -45,7 +45,7 @@ namespace KnowShow
             if (string.IsNullOrWhiteSpace(connectionString))
                 throw new Exception($"{nameof(connectionString)} is empty.");
             var repository = new LogRepository(connectionString);
- 
+
             if (request.Method == "GET")
                 return await HandleGet(request, repository, log);
             else
@@ -54,7 +54,7 @@ namespace KnowShow
 
         private static async Task<IActionResult> HandleGet(HttpRequest request, LogRepository repository, ILogger log)
         {
-            if (!Authentication.HasAccountToken(request, out var accountId))
+            if (!Authentication.HasAccountToken(request, out var accountId, log))
                 return new UnauthorizedResult();
 
             string name = request.Query["name"];
@@ -63,7 +63,7 @@ namespace KnowShow
 
             string type = request.Query["type"];
             if (type == null)
-                type ="log";
+                type = "log";
 
             if (type == "log")
             {
@@ -73,7 +73,7 @@ namespace KnowShow
 
                 var logStore = await repository.GetLog(name, onlyLogsSince);
 
-                return (ActionResult)new OkObjectResult(logStore);
+                return (ActionResult) new OkObjectResult(logStore);
             }
             else
             {
@@ -89,15 +89,14 @@ namespace KnowShow
             if (name == null)
                 return new BadRequestObjectResult("Please pass a name on the query string or in the request body");
 
-            string type = data.type;
-            if (string.IsNullOrEmpty(type) || type == "heartbeat")
-            {
-                string message = data.message ?? "heartbeat logged";
-                await repository.InsertLog(name, DateTime.UtcNow, message);
-                return new OkResult();
-            }
+            string[] messages =
+                data.message != null
+                ? new string[] { data.message }
+                : data.messages.ToObject<string[]>();
 
-            return new BadRequestObjectResult($"Unrecognised value for {nameof(type)}: '{type}'");
+            await repository.InsertLogs(name, DateTime.UtcNow, messages);
+
+            return new OkResult();
         }
     }
 }

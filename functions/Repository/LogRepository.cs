@@ -1,17 +1,19 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage;
-using Newtonsoft.Json;
-using Microsoft.WindowsAzure.Storage.Table;
 using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.WindowsAzure.Storage.Table;
+using Newtonsoft.Json;
 
 namespace KnowShow.Repository
 {
@@ -27,21 +29,34 @@ namespace KnowShow.Repository
 
         public async Task InsertLog(string logStoreName, DateTime logTimestamp, string logResult)
         {
+            await InsertLogs(logStoreName, logTimestamp, new string[] { logResult });
+        }
+        public async Task InsertLogs(string logStoreName, DateTime logTimestamp, IEnumerable<string> logResults)
+        {
             LogStore logStore = await GetLog(logStoreName);
 
-            try
+            foreach (var logResult in logResults)
             {
-                var base64EncodedBytes = System.Convert.FromBase64String(logResult);
-                logResult = System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
-            }
-            catch
-            {
-                // not base64 encoded
-            }
+                string logResultDecoded = null;
+                if (CouldBeBase64String(logResult))
+                {
+                    try
+                    {
+                        var base64EncodedBytes = System.Convert.FromBase64String(logResult);
+                        logResultDecoded = System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
+                    }
+                    catch
+                    {
+                        // not base64 encoded
+                    }
+                }
 
-            var isSuccessful = logResult.ToLower().Contains("completed successfully");
+                if (logResultDecoded == null)
+                    logResultDecoded = logResult;
 
-            logStore.Logs.Add(new LogStore.LogItem(logTimestamp, isSuccessful, logResult));
+                var isSuccessful = logResult.ToLower().Contains("completed successfully");
+                logStore.Logs.Add(new LogStore.LogItem(logTimestamp, isSuccessful, logResultDecoded));
+            }
 
             var container = m_blobClient.GetContainerReference("log-store");
             var blob = container.GetBlockBlobReference($"{logStoreName}.json");
@@ -64,6 +79,13 @@ namespace KnowShow.Repository
                 .ToList();
 
             return logStore;
+        }
+
+        public bool CouldBeBase64String(string s)
+        {
+            s = s.Trim();
+            return (s.Length % 4 == 0) && Regex.IsMatch(s, @"^[a-zA-Z0-9\+/]*={0,3}$", RegexOptions.None);
+
         }
     }
 }
