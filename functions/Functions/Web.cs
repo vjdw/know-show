@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
 
-namespace KnowShow
+namespace KnowShow.Functions
 {
     public static class Web
     {

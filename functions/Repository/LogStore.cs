@@ -8,25 +8,23 @@ namespace KnowShow.Repository
         public LogStore(string name)
         {
             Name = name;
-            Logs = new List<LogItem>();
+            SuccessPattern = "";
+            Logs = new List<LogStoreItem>();
         }
 
         public string Name { get; set; }
+        public string SuccessPattern { get; set; }
+        public List<LogStoreItem> Logs { get; set; }
 
-        public List<LogItem> Logs { get; set; }
-
-        public class LogItem
+        public class LogStoreItem
         {
-            public LogItem(DateTime timestamp, bool successful, string result)
+            public LogStoreItem(DateTime timestamp, string result)
             {
                 Timestamp = timestamp;
-                Successful = successful;
                 Result = result;
             }
-            public DateTime Timestamp {get; private set;}
-            public bool Successful {get; private set;}
-            public string Result {get; private set;}
-            
+            public DateTime Timestamp { get; private set; }
+            public string Result { get; private set; }
         }
     }
 }

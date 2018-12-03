@@ -92,10 +92,10 @@
                     withCredentials: false
                 },
                 success: function (data) {
-                    console.log(data)
+                    console.log('meter data: ' + data)
                     self.data = data
-                    self.total = data.logs.length
-                    self.dataset = data.logs.map(log => ({
+                    self.total = data.logItems.length
+                    self.dataset = data.logItems.map(log => ({
                         x: log.timestamp,
                         y: log.result.replace(/\D+$/g, "") // extract number value at start of string
                     })).reverse()

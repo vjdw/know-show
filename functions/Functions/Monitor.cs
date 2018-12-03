@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using functions.Utility;
 using KnowShow.Repository;
 using MailKit;
 using MailKit.Net.Smtp;
@@ -13,7 +14,7 @@ using Microsoft.Extensions.Logging;
 using MimeKit;
 using Newtonsoft.Json;
 
-namespace KnowShow
+namespace KnowShow.Functions
 {
     public static class Monitor
     {
@@ -32,9 +33,9 @@ namespace KnowShow
             DateTime? onlyLogsSince = DateTime.UtcNow.Subtract(new TimeSpan(25, 0, 0));
 
             var logStore = await repository.GetLog(logStoreName, onlyLogsSince);
+            var mostRecentLog = logStore.Logs.FirstOrDefault()?.SuccessByContains(logStore.SuccessPattern);
 
             string statusMessage = $"{logStoreName} status at {DateTime.UtcNow.ToString("s")}Z:\n\n";
-            var mostRecentLog = logStore.Logs.FirstOrDefault();
             if (mostRecentLog == null)
                 statusMessage += "No logs in last 25 hours";
             else if (mostRecentLog.Successful)

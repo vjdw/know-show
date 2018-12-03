@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace FunctionApp
+namespace FunctionApp.Functions
 {
     public static class Functions
     {

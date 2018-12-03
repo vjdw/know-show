@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using KnowShow.Utility;
 
-namespace KnowShow
+namespace KnowShow.Functions
 {
     public static class Login
     {

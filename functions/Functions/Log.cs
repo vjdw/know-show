@@ -2,8 +2,10 @@ using System;
 using System.Configuration;
 using System.IO;
 using System.Threading.Tasks;
+using functions.Utility;
 using KnowShow.Repository;
 using KnowShow.Utility;
+using KnowShow.ViewModel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -32,7 +34,7 @@ using Newtonsoft.Json;
 //     ?id=xyz&type=flag&expected=true&current=false
 //     ?id=xyz&type=message&level=[info/warning/error]&current=xyz
 
-namespace KnowShow
+namespace KnowShow.Functions
 {
     public static class Log
     {
@@ -72,8 +74,10 @@ namespace KnowShow
                     onlyLogsSince = DateTime.UtcNow.Subtract(new TimeSpan(hours, 0, 0));
 
                 var logStore = await repository.GetLog(name, onlyLogsSince);
+                var processedLogs = logStore.Logs.SuccessByContains(logStore.SuccessPattern);
+                var logResult = new LogViewModel(logStore.Name, processedLogs);
 
-                return (ActionResult) new OkObjectResult(logStore);
+                return (ActionResult) new OkObjectResult(logResult);
             }
             else
             {

@@ -27,7 +27,7 @@
         xhrFields: { withCredentials: false },
         success: function(data) {
           console.log(data)
-          self.items = data.logs
+          self.items = data.logItems
           self.update()
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {

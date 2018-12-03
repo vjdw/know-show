@@ -54,8 +54,7 @@ namespace KnowShow.Repository
                 if (logResultDecoded == null)
                     logResultDecoded = logResult;
 
-                var isSuccessful = logResult.ToLower().Contains("completed successfully");
-                logStore.Logs.Add(new LogStore.LogItem(logTimestamp, isSuccessful, logResultDecoded));
+                logStore.Logs.Add(new LogStore.LogStoreItem(logTimestamp, logResultDecoded));
             }
 
             var container = m_blobClient.GetContainerReference("log-store");
