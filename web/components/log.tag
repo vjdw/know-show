@@ -28,6 +28,7 @@
     </script>
 
     <style>
+
         .logContainer {
             box-shadow: 0px 0px 32px 0px #52414C78;
             background: #ebf5e1;

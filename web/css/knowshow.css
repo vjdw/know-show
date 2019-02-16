@@ -8,9 +8,9 @@ body {
 
 loglist {
   display: block;
-  /* max-width: 400px; */
-  /* margin: 5% auto; */
-  /* box-shadow: 3px 3px 5px 6px #ccc; */
+  /* max-width: 400px;
+  /* margin: 5% auto;
+  /* box-shadow: 3px 3px 5px 6px #ccc;*/
 }
 
 form input {

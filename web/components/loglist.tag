@@ -1,6 +1,6 @@
 <ks-loglist>
   <h3>{ opts.name }</h3>
-
+  
   <ul>
     <li each={ item in items }>
       <ks-log successful={item.successful} timestamp={item.timestamp} log={item.result}></ks-log>
@@ -8,10 +8,13 @@
   </ul>
 
   <script>
-    var logTagUrl = "web/components/log.tag"
-
     var self = this
     this.items = []
+
+    riot.compile('web/components/log.tag', function(){
+      riot.mount( 'ks-log')
+    }.bind(this))
+   
     this.on('mount', function(){
       var logs = self.getLogs()
       self.update({items: logs})

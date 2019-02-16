@@ -7,6 +7,16 @@
     <script>
         var self = this;
 
+        riot.compile('web/components/login.tag', function(){
+            riot.mount( 'ks-login')
+        }.bind(this))
+        riot.compile('web/components/meter.tag', function(){
+            riot.mount( 'ks-meter')
+        }.bind(this))
+        riot.compile('web/components/loglist.tag', function(){
+            riot.mount( 'ks-loglist')
+        }.bind(this))
+
         var r = route.create()
         r('login',     doDisplayLogin   )
         r('dashboard', dodisplayDashboard )
