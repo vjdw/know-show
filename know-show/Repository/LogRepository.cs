@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using KnowShow.Repository.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -12,7 +13,6 @@ using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
-using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
 
 namespace KnowShow.Repository
@@ -33,7 +33,7 @@ namespace KnowShow.Repository
         }
         public async Task InsertLogs(string logStoreName, DateTime logTimestamp, IEnumerable<string> logResults)
         {
-            LogStore logStore = await GetLog(logStoreName);
+            LogStore logStore = await GetLogStore(logStoreName);
 
             foreach (var logResult in logResults)
             {
@@ -42,7 +42,7 @@ namespace KnowShow.Repository
                 {
                     try
                     {
-                        var base64EncodedBytes = System.Convert.FromBase64String(logResult);
+                        var base64EncodedBytes = Convert.FromBase64String(logResult);
                         logResultDecoded = System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
                     }
                     catch
@@ -57,12 +57,33 @@ namespace KnowShow.Repository
                 logStore.Logs.Add(new LogStore.LogStoreItem(logTimestamp, logResultDecoded));
             }
 
+            // xyzzy test this (keeping only 30 most recent logs)
+            logStore.Logs = logStore.Logs.OrderByDescending(_ => _.Timestamp).Take(30).ToList();
+
             var container = m_blobClient.GetContainerReference("log-store");
             var blob = container.GetBlockBlobReference($"{logStoreName}.json");
             await blob.UploadTextAsync(JsonConvert.SerializeObject(logStore));
         }
 
-        public async Task<LogStore> GetLog(string logStoreName, DateTime? onlyLogsSince = null)
+        public async Task<IEnumerable<string>> GetLogStoreNames()
+        {
+            var container = m_blobClient.GetContainerReference("log-store");
+            await container.CreateIfNotExistsAsync();
+
+            var logStoreNames = new List<string>();
+            BlobContinuationToken continuationToken = null;
+            do
+            {
+                var blobs = await container.ListBlobsSegmentedAsync(continuationToken);
+                continuationToken = blobs.ContinuationToken;
+                logStoreNames.AddRange(blobs.Results.Select(_ => _.Uri.Segments.Last().Replace(".json", "")));
+
+            } while (continuationToken != null);
+
+            return logStoreNames;
+        }
+
+        public async Task<LogStore> GetLogStore(string logStoreName)
         {
             var container = m_blobClient.GetContainerReference("log-store");
             await container.CreateIfNotExistsAsync();
@@ -71,11 +92,6 @@ namespace KnowShow.Repository
             LogStore logStore = await blob.ExistsAsync()
                 ? JsonConvert.DeserializeObject<LogStore>(await blob.DownloadTextAsync())
                 : new LogStore(logStoreName);
-
-            logStore.Logs = logStore.Logs
-                .Where(log => onlyLogsSince == null || log.Timestamp >= onlyLogsSince)
-                .OrderByDescending(log => log.Timestamp)
-                .ToList();
 
             return logStore;
         }

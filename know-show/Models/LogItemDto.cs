@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 
-namespace KnowShow.ViewModel
+namespace KnowShow.Models
 {
-    public class LogItem
+    public class LogItemDto
     {
-        public LogItem(DateTime timestamp, string result, bool successful)
+        public LogItemDto(DateTime timestamp, string result, bool successful)
         {
             Timestamp = timestamp;
             Result = result;
