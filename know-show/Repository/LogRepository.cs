@@ -57,7 +57,7 @@ namespace KnowShow.Repository
                 logStore.Logs.Add(new LogStore.LogStoreItem(logTimestamp, logResultDecoded));
             }
 
-            // xyzzy test this (keeping only 30 most recent logs)
+            // Keep only last 30 logs
             logStore.Logs = logStore.Logs.OrderByDescending(_ => _.Timestamp).Take(30).ToList();
 
             var container = m_blobClient.GetContainerReference("log-store");
@@ -91,7 +91,7 @@ namespace KnowShow.Repository
 
             LogStore logStore = await blob.ExistsAsync()
                 ? JsonConvert.DeserializeObject<LogStore>(await blob.DownloadTextAsync())
-                : new LogStore(logStoreName);
+                : new LogStore(logStoreName, logStoreName);
 
             return logStore;
         }
