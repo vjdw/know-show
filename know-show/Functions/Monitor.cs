@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using KnowShow.Utility;
@@ -28,7 +28,7 @@ namespace KnowShow.Functions
             log.LogInformation($"{nameof(Monitor)} {nameof(Run)} function entered at: {DateTime.Now}");
 
             var logResults = await BuildLogResults();
-            var emailMessage = BuildEmail(logResults);
+            var emailMessage = BuildEmail(logResults.ToList());
 
             using (var smtpClient = new SmtpClient())
             {
@@ -66,14 +66,15 @@ namespace KnowShow.Functions
 
                 var statusMessage = $"{logStoreName} status at {DateTime.UtcNow.ToString("s")}Z:\n\n";
                 if (mostRecentLog == null)
-                    return new LogResult { Title = logStore.Description, Success = false, Message = $"No logs in last {logStore.PeriodHours} hours" };
+                    return new LogResult { Title = logStore.DisplayName, DisplayOrder = logStore.DisplayOrder, Success = false, Message = $"No logs in last {logStore.PeriodHours} hours" };
                 else if (mostRecentLog.Successful)
-                    return new LogResult { Title = logStore.Description, Success = true, Message = $"Most recent log entry flagged successful at {mostRecentLog.Timestamp.ToString("s")}Z" };
+                    return new LogResult { Title = logStore.DisplayName, DisplayOrder = logStore.DisplayOrder, Success = true, Message = $"Most recent log entry flagged successful at {mostRecentLog.Timestamp.ToString("s")}Z" };
                 else
-                    return new LogResult { Title = logStore.Description, Success = false, Message = mostRecentLog.Result };
+                    return new LogResult { Title = logStore.DisplayName, DisplayOrder = logStore.DisplayOrder, Success = false, Message = mostRecentLog.Result };
             });
 
-            return await Task.WhenAll(statusMessageTasks);
+            var statusMessages = await Task.WhenAll(statusMessageTasks);
+            return statusMessages.OrderBy(_ => _.DisplayOrder);
         }
 
         private MimeMessage BuildEmail(IEnumerable<LogResult> logResults)
@@ -83,8 +84,10 @@ namespace KnowShow.Functions
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress("Know-Show", _config.GetValue<string>("EmailFromAddress")));
             message.To.Add(new MailboxAddress("Alert", _config.GetValue<string>("Client:EmailAddress")));
-            message.Subject = $"Know-Show {logResults.Count(_ => _.Success)}/{logResults.Count()} OK @ {emailGeneratedAtUtc.ToString("s")}Z";
 
+            var successLogCount = logResults.Count(_ => _.Success);
+            var totalLogCount = logResults.Count();
+            message.Subject = $"{(successLogCount == totalLogCount ? "✅" : "❌")} Know-Show - {successLogCount}/{totalLogCount} @ {emailGeneratedAtUtc.ToString("s")}Z";
             var builder = new BodyBuilder();
             builder.TextBody = BuildTextEmailMessage(logResults, emailGeneratedAtUtc);
             builder.HtmlBody = BuildHtmlEmailMessage(logResults, emailGeneratedAtUtc);
@@ -180,6 +183,7 @@ footer {{
         private class LogResult
         {
             public string Title { get; set; }
+            public int DisplayOrder { get; set; }
             public bool Success { get; set; }
             public string Message { get; set; }
         }
