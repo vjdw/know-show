@@ -10,22 +10,25 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using Microsoft.Azure.Functions.Worker;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace KnowShow.Functions
 {
     public class Monitor
     {
-        IConfiguration _config;
+        private readonly ILogger<Monitor> _logger;
+        private readonly IConfiguration _config;
 
-        public Monitor(IConfiguration config)
+        public Monitor(ILogger<Monitor> logger, IConfiguration config)
         {
+            _logger = logger;
             _config = config;
         }
 
         [Function("monitor")]
-        public async Task Run([TimerTrigger("0 0 8 * * *", RunOnStartup = false)] TimerInfo myTimer, ILogger log)
+        public async Task Run([TimerTrigger("0 0 8 * * *", RunOnStartup = false)] TimerInfo myTimer)
         {
-            log.LogInformation($"{nameof(Monitor)} {nameof(Run)} function entered at: {DateTime.Now}");
+            _logger.LogInformation($"{nameof(Monitor)} {nameof(Run)} function entered at: {DateTime.Now}");
 
             var logResults = await BuildLogResults();
             var emailMessage = BuildEmail(logResults.ToList());
@@ -42,7 +45,7 @@ namespace KnowShow.Functions
                 smtpClient.Disconnect(true);
             }
 
-            log.LogInformation("Monitor function completed successfully.");
+            _logger.LogInformation("Monitor function completed successfully.");
         }
 
         private async Task<IEnumerable<LogResult>> BuildLogResults()

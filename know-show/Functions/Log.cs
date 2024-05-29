@@ -35,15 +35,17 @@ namespace KnowShow.Functions
 {
     public class Log
     {
-        IConfiguration _config;
+        private readonly ILogger<Log> _logger;
+        private readonly IConfiguration _config;
 
-        public Log(IConfiguration config)
+        public Log(ILogger<Log> logger, IConfiguration config)
         {
+            _logger = logger;
             _config = config;
         }
 
         [Function("log")]
-        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest request, ILogger logger)
+        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest request)
         {
             string connectionString = _config.GetConnectionString("Storage");
             if (string.IsNullOrWhiteSpace(connectionString))
@@ -51,12 +53,12 @@ namespace KnowShow.Functions
             var repository = new LogRepository(connectionString);
 
             if (request.Method == "GET")
-                return await HandleGet(request, repository, logger);
+                return await HandleGet(request, repository);
             else
-                return await HandlePost(request, repository, logger);
+                return await HandlePost(request, repository);
         }
 
-        private async Task<IActionResult> HandleGet(HttpRequest request, LogRepository repository, ILogger logger)
+        private async Task<IActionResult> HandleGet(HttpRequest request, LogRepository repository)
         {
             string name = request.Query["name"];
             if (name == null)
@@ -88,7 +90,7 @@ namespace KnowShow.Functions
             }
         }
 
-        private static async Task<IActionResult> HandlePost(HttpRequest request, LogRepository repository, ILogger logger)
+        private static async Task<IActionResult> HandlePost(HttpRequest request, LogRepository repository)
         {
             string requestBody = await new StreamReader(request.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);
