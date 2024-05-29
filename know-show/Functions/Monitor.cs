@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 using KnowShow.Utility;
 using KnowShow.Repository;
 using MailKit.Net.Smtp;
-using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using MimeKit;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
+using Microsoft.Azure.Functions.Worker;
 
 namespace KnowShow.Functions
 {
@@ -22,7 +22,7 @@ namespace KnowShow.Functions
             _config = config;
         }
 
-        [FunctionName("monitor")]
+        [Function("monitor")]
         public async Task Run([TimerTrigger("0 0 8 * * *", RunOnStartup = false)] TimerInfo myTimer, ILogger log)
         {
             log.LogInformation($"{nameof(Monitor)} {nameof(Run)} function entered at: {DateTime.Now}");
@@ -66,15 +66,15 @@ namespace KnowShow.Functions
 
                 var statusMessage = $"{logStoreName} status at {DateTime.UtcNow.ToString("s")}Z:\n\n";
                 if (mostRecentLog == null)
-                    return new LogResult { Title = logStore.DisplayName, DisplayOrder = logStore.DisplayOrder, Success = false, Message = $"No logs in last {logStore.PeriodHours} hours" };
+                    return new LogResult { Title = logStore.DisplayName, Timestamp = DateTime.MaxValue, DisplayOrder = logStore.DisplayOrder, Success = SuccessState.Missing, Message = $"No logs in last {logStore.PeriodHours} hours" };
                 else if (mostRecentLog.Successful)
-                    return new LogResult { Title = logStore.DisplayName, DisplayOrder = logStore.DisplayOrder, Success = true, Message = $"Most recent log entry flagged successful at {mostRecentLog.Timestamp.ToString("s")}Z" };
+                    return new LogResult { Title = logStore.DisplayName, Timestamp = mostRecentLog.Timestamp, DisplayOrder = logStore.DisplayOrder, Success = SuccessState.Success, Message = $"Log ok at {mostRecentLog.Timestamp.ToString("s")}Z" };
                 else
-                    return new LogResult { Title = logStore.DisplayName, DisplayOrder = logStore.DisplayOrder, Success = false, Message = mostRecentLog.Result };
+                    return new LogResult { Title = logStore.DisplayName, Timestamp = mostRecentLog.Timestamp, DisplayOrder = logStore.DisplayOrder, Success = SuccessState.Failed, Message = mostRecentLog.Result };
             });
 
             var statusMessages = await Task.WhenAll(statusMessageTasks);
-            return statusMessages.OrderBy(_ => _.DisplayOrder);
+            return statusMessages.OrderByDescending(_ => _.Timestamp).ThenBy(_ => _.DisplayOrder);
         }
 
         private MimeMessage BuildEmail(IEnumerable<LogResult> logResults)
@@ -85,9 +85,9 @@ namespace KnowShow.Functions
             message.From.Add(new MailboxAddress("Know-Show", _config.GetValue<string>("EmailFromAddress")));
             message.To.Add(new MailboxAddress("Alert", _config.GetValue<string>("Client:EmailAddress")));
 
-            var successLogCount = logResults.Count(_ => _.Success);
+            var successLogCount = logResults.Count(_ => _.Success == SuccessState.Success);
             var totalLogCount = logResults.Count();
-            message.Subject = $"{(successLogCount == totalLogCount ? "✅" : "❌")} Know-Show - {successLogCount}/{totalLogCount} @ {emailGeneratedAtUtc.ToString("s")}Z";
+            message.Subject = $"{(successLogCount == totalLogCount ? "🆗" : "❌")} Know-Show - {successLogCount}/{totalLogCount} @ {emailGeneratedAtUtc.ToString("s")}Z";
             var builder = new BodyBuilder();
             builder.TextBody = BuildTextEmailMessage(logResults, emailGeneratedAtUtc);
             builder.HtmlBody = BuildHtmlEmailMessage(logResults, emailGeneratedAtUtc);
@@ -105,8 +105,8 @@ namespace KnowShow.Functions
                 resultsHtml.Append(@$"<div class=""result-container"">
     <span class=""title"">{logResult.Title}</span>
     <div class=""result-status-container"">
-        <span>{(logResult.Success ? "OK" : "ERROR")}</span>
-        <img src=""https://knowshowlivestorage.blob.core.windows.net/assets/{(logResult.Success ? "green" : "red")}-circle.svg""></img>
+        <span>{(logResult.Success == SuccessState.Success ? "OK" : logResult.Success == SuccessState.Missing ? "MISSING" : "ERROR")}</span>
+        <img src=""https://knowshowlivestorage.blob.core.windows.net/assets/{(logResult.Success == SuccessState.Success ? "green" : logResult.Success == SuccessState.Missing ? "amber" : "red")}-circle.svg""></img>
     </div>
     <p class=""message"">{logResult.Message}</p>
 </div>");
@@ -172,7 +172,7 @@ footer {{
             var resultsText = new StringBuilder();
             foreach (var logResult in logResults)
             {
-                resultsText.AppendLine($@"{logResult.Title} {(logResult.Success ? "OK" : "ERROR")}");
+                resultsText.AppendLine($@"{logResult.Title} {(logResult.Success == SuccessState.Success ? "OK" : logResult.Success == SuccessState.Missing ? "MISSING" : "ERROR")}");
                 resultsText.AppendLine(logResult.Message);
                 resultsText.AppendLine();
             }
@@ -180,12 +180,20 @@ footer {{
             return resultsText.ToString();
         }
 
+        private enum SuccessState
+        {
+            Missing,
+            Failed,
+            Success
+        }
+
         private class LogResult
         {
             public string Title { get; set; }
             public int DisplayOrder { get; set; }
-            public bool Success { get; set; }
+            public SuccessState Success { get; set; }
             public string Message { get; set; }
+            public DateTime Timestamp { get; set; }
         }
     }
 }

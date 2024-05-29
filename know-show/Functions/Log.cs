@@ -4,14 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using KnowShow.Utility;
 using KnowShow.Repository;
-using KnowShow.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Microsoft.Extensions.Configuration;
+
+using Microsoft.Azure.Functions.Worker;
+using Newtonsoft.Json;
 
 // setup:
 // - CORS
@@ -43,8 +42,8 @@ namespace KnowShow.Functions
             _config = config;
         }
 
-        [FunctionName("log")]
-        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, /*"get",*/ "post", Route = null)] HttpRequest request, ILogger logger)
+        [Function("log")]
+        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest request, ILogger logger)
         {
             string connectionString = _config.GetConnectionString("Storage");
             if (string.IsNullOrWhiteSpace(connectionString))
