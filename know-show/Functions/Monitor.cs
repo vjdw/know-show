@@ -86,7 +86,7 @@ namespace KnowShow.Functions
 
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress("Know-Show", _config.GetValue<string>("EmailFromAddress")));
-            message.To.Add(new MailboxAddress("Alert", _config.GetValue<string>("Client:EmailAddress")));
+            message.To.Add(new MailboxAddress("Alert", _config.GetValue<string>("EmailToAddress")));
 
             var successLogCount = logResults.Count(_ => _.Success == SuccessState.Success);
             var totalLogCount = logResults.Count();
@@ -109,7 +109,7 @@ namespace KnowShow.Functions
     <span class=""title"">{logResult.Title}</span>
     <div class=""result-status-container"">
         <span>{(logResult.Success == SuccessState.Success ? "OK" : logResult.Success == SuccessState.Missing ? "MISSING" : "ERROR")}</span>
-        <img src=""https://knowshowlivestorage.blob.core.windows.net/assets/{(logResult.Success == SuccessState.Success ? "green" : logResult.Success == SuccessState.Missing ? "amber" : "red")}-circle.svg""></img>
+        <img src=""https://knowshow.blob.core.windows.net/assets/{(logResult.Success == SuccessState.Success ? "green" : logResult.Success == SuccessState.Missing ? "amber" : "red")}-circle.svg""></img>
     </div>
     <p class=""message"">{logResult.Message}</p>
 </div>");
