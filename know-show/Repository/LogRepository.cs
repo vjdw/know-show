@@ -37,7 +37,10 @@ namespace KnowShow.Repository
             if (!await blob.ExistsAsync())
             {
                 var emptyLogStore = new LogStore(logStoreName, logStoreName);
-                await blob.UploadAsync(JsonConvert.SerializeObject(emptyLogStore));
+
+                await blob.UploadAsync(
+                    BinaryData.FromString(JsonConvert.SerializeObject(emptyLogStore))
+                );
             }
             var blobLeaseId = await GetBlobLeaseId(blob);
 
